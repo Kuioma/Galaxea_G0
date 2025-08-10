@@ -1,6 +1,5 @@
 # Galaxea G0: Open-World Dataset & Dual-System VLA Model
 
----
 
 ## 📌 Overview
 
@@ -16,7 +15,6 @@ The dataset and model are designed to **advance real-world, long-horizon, and fe
   <img src="assets/teaser.png" alt="Galaxea Dataset & G0 Dual-System Overview" width="700"/>
 </p>
 
----
 
 ## 🚀 Galaxea Open-World Dataset
 
