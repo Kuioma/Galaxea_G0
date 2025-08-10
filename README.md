@@ -24,9 +24,6 @@ The dataset and model are designed to **advance real-world, long-horizon, and fe
 - Fine-grained **subtask language annotations**.
 - Covers **residential**, **kitchen**, **retail**, and **office** settings.
 
-<p align="center">
-  <img src="assets/location_distribution.png" alt="Location Distribution" width="500"/>
-</p>
 
 ## 📜 Citation
 
