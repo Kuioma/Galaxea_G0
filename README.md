@@ -1,4 +1,9 @@
-# Galaxea G0: Open-World Dataset & Dual-System VLA Model
+# Galaxea Open-World Dataset & G0 Dual-System VLA Model
+
+[![Project Page](https://img.shields.io/badge/Project%20Page-000000?style=for-the-badge&logo=github)](https://opengalaxea.github.io/G0/)
+[![Paper](https://img.shields.io/badge/Paper-8A2BE2?style=for-the-badge&logo=arxiv)](https://opengalaxea.github.io/G0/)
+[![Videos](https://img.shields.io/badge/Videos-FF0000?style=for-the-badge&logo=youtube)](https://opengalaxea.github.io/G0/)
+
 
 
 ## 📌 Overview
