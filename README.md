@@ -4,7 +4,7 @@
 ## 📌 Overview
 
 We introduce **Galaxea Open-World Dataset**, a large-scale, high-quality robot behavior dataset collected in **authentic human living and working environments**.  
-We also present **G0**, a **dual-system Vision-Language-Action (VLA)** model that combines:
+We also present **G0**, a **dual-system VLA** model that combines:
 
 - **G0-VLM**: a multimodal planner for high-level reasoning and subtask planning.  
 - **G0-VLA**: a real-time executor for precise low-level action control.
