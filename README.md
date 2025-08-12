@@ -5,6 +5,8 @@
 [![Videos](https://img.shields.io/badge/Videos-FF0000?style=for-the-badge&logo=youtube)](https://opengalaxea.github.io/G0/)
 
 
+**We will open-source the dataset and model in the coming weeks, stay tuned!**
+
 
 ## 📌 Overview
 
