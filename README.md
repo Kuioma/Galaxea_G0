@@ -5,7 +5,22 @@
 [![Videos](https://img.shields.io/badge/Videos-FF0000?style=for-the-badge&logo=youtube)](https://opengalaxea.github.io/G0/)
 
 
-**We will open-source the dataset and model in the coming weeks, stay tuned!**
+## ⏰ Roadmap / Release Timeline
+
+We are gradually open-sourcing the dataset and model. Progress will be updated here:
+
+- [ ] **Aug 23, 2025**  
+  - Release **Galaxea Open-World Dataset**.
+
+- [ ] **End of Aug, 2025**  
+  - Release **G0-VLA real-robot inference code**.
+  - Release **preview version of G0-VLA pretrained weights**.
+
+- [ ] **Mid-Sep, 2025**  
+  - Release **G0-VLA fine-tuning and evaluation code**.
+  
+- [ ] **Later in 2025**  
+  - 🔮 More updates to come (extended datasets, improved models, additional tools).
 
 
 ## 📌 Overview
