@@ -109,7 +109,6 @@ def main(
 
     for i, episode in enumerate(tqdm(ds.take(num_trajs), total=num_trajs, desc="Exporting videos")):
         head_frames = []
-        instruction = "No instruction found"
         
         for step in episode['steps']:
             head_rgb_image = step['observation']['image_camera_head'].numpy()
