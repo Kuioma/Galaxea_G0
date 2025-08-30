@@ -4,8 +4,8 @@
 [![Paper](https://img.shields.io/badge/Paper-8A2BE2?style=for-the-badge&logo=arxiv)](https://github.com/OpenGalaxea/G0/blob/main/Galaxea_G0_report.pdf)
 [![Videos](https://img.shields.io/badge/Videos-FF0000?style=for-the-badge&logo=youtube)](https://opengalaxea.github.io/G0/)
 [![Visualizer](https://img.shields.io/badge/Visualizer-FF8C00?style=for-the-badge&logo=airplayvideo)](https://opengalaxea.github.io/G0/visualizer/index.html)
-[![Huggingface](https://img.shields.io/badge/Huggingface-FF6B35?style=for-the-badge&logo=huggingface)](https://huggingface.co/OpenGalaxea)
-[![Modelscope](https://img.shields.io/badge/Modelscope-1890FF?style=for-the-badge&logo=alibabacloud)](https://www.modelscope.cn/organization/Galaxea)
+[![Huggingface](https://img.shields.io/badge/Huggingface-FF6B35?style=for-the-badge&logo=huggingface)](https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset)
+[![Modelscope](https://img.shields.io/badge/Modelscope-1890FF?style=for-the-badge&logo=alibabacloud)](https://www.modelscope.cn/datasets/Galaxea/Galaxea-Open-World-Dataset)
 
 
 
@@ -16,7 +16,7 @@ We are gradually open-sourcing the dataset and model. Progress will be updated h
 
 - [x] **Aug 23, 2025**  
   - Release **Galaxea Open-World Dataset**.
-  - Now our Open-Galaxea-Dataset is available at Huggingface and Modelscope!
+  - Now our Open-Galaxea-Dataset is available at [Huggingface](https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset) and [Modelscope](https://www.modelscope.cn/datasets/Galaxea/Galaxea-Open-World-Dataset)!
 
 - [ ] **End of Aug, 2025**  
   - Release **G0-VLA real-robot inference code**.
