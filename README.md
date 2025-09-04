@@ -6,6 +6,8 @@
 [![Visualizer](https://img.shields.io/badge/Visualizer-FF8C00?style=for-the-badge&logo=airplayvideo)](https://opengalaxea.github.io/G0/visualizer/index.html)
 [![Huggingface](https://img.shields.io/badge/Huggingface-FF6B35?style=for-the-badge&logo=huggingface)](https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset)
 [![Modelscope](https://img.shields.io/badge/Modelscope-1890FF?style=for-the-badge&logo=alibabacloud)](https://www.modelscope.cn/datasets/Galaxea/Galaxea-Open-World-Dataset)
+[![Twitter](https://img.shields.io/badge/Twitter-FF6B35?style=for-the-badge&logo=x)](https://x.com/Galaxea_x)
+[![Linkedin](https://img.shields.io/badge/Linkedin-1890FF?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/company/galaxeadynamics/posts/?feedView=all&viewAsMember=true)
 
 
 
