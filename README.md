@@ -143,6 +143,6 @@ If you use our dataset or models, please cite:
 @article{galaxea2025,
   title={Galaxea G0: Open-World Dataset and Dual-System VLA Model},
   author={Galaxea Team},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
+  journal={arXiv preprint arXiv:2509.00576v1},
   year={2025}
 }
