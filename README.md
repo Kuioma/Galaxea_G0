@@ -23,7 +23,7 @@ We are gradually open-sourcing the dataset and model. Progress will be updated h
 - [x] **Sep 9, 2025**  
   - Release **G0-VLA pretrained model weights**.
 
-- [x] **Mid-Sep, 2025**  
+- [] **Mid-Sep, 2025**  
   - Release **Lerobot Format Galaxea Open-World Dataset**.
 
 - [ ] **Mid-Sep, 2025**  
