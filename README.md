@@ -22,6 +22,7 @@ We are gradually open-sourcing the dataset and model. Progress will be updated h
 
 - [x] **Sep 9, 2025**  
   - Release **G0-VLA pretrained model weights**.
+  - Now our pretained weight is available at [Huggingface](https://huggingface.co/OpenGalaxea/G0-VLA) and [Modelscope](https://www.modelscope.cn/models/Galaxea/G0-VLA)!
 
 - [ ] **Mid-Sep, 2025**  
   - Release **Lerobot Format Galaxea Open-World Dataset**.
