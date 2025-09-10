@@ -20,9 +20,14 @@ We are gradually open-sourcing the dataset and model. Progress will be updated h
   - Release **Galaxea Open-World Dataset**.
   - Now our Open-Galaxea-Dataset is available at [Huggingface](https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset) and [Modelscope](https://www.modelscope.cn/datasets/Galaxea/Galaxea-Open-World-Dataset)!
 
+- [x] **Sep 9, 2025**  
+  - Release **G0-VLA pretrained model weights**.
+
+- [x] **Mid-Sep, 2025**  
+  - Release **Lerobot Format Galaxea Open-World Dataset**.
+
 - [ ] **Mid-Sep, 2025**  
   - Release **G0-VLA real-robot inference code**.
-  - Release **preview version of G0-VLA pretrained weights**.
 
 - [ ] **Mid-Sep, 2025**  
   - Release **G0-VLA fine-tuning and evaluation code**.
