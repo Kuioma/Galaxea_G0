@@ -24,15 +24,15 @@ We are gradually open-sourcing the dataset and model. Progress will be updated h
   - Release **G0-VLA pretrained model weights**.
   - Now our pretained weight is available at [Huggingface](https://huggingface.co/OpenGalaxea/G0-VLA) and [Modelscope](https://www.modelscope.cn/models/Galaxea/G0-VLA)!
 
+- [x] **Sep16, 2025**  
+  - Release **G0-VLA real-robot [inference code](docs/inference.md)**.
+
 - [ ] **Mid-Sep, 2025**  
   - Release **Lerobot Format Galaxea Open-World Dataset**.
 
 - [ ] **Mid-Sep, 2025**  
-  - Release **G0-VLA real-robot inference code**.
+  - Release **G0-VLA fine-tuning code**.
 
-- [ ] **Mid-Sep, 2025**  
-  - Release **G0-VLA fine-tuning and evaluation code**.
-  
 - [ ] **Later in 2025**  
   - 🔮 More updates to come (extended datasets, improved models, additional tools).
 
@@ -52,95 +52,98 @@ The dataset and model are designed to **advance real-world, long-horizon, and fe
 </p>
 
 
+
 ## 🚀 Galaxea Open-World Dataset
 
 ### **Key features**
+
 - **500+ hours** of real-world mobile manipulation data.
 - All data collected using **one uniform robotic embodiment** for consistency.
 - Fine-grained **subtask language annotations**.
 - Covers **residential**, **kitchen**, **retail**, and **office** settings.
 - Dataset in **RLDS** format.
 
-### Dataset Schema
+See more dataset (formats and examples) details [here](docs/dataset.md).
+
+## G0-VLA
+
+#### GPU Requirements
+
+To run our pretrained models in this repository, you will need an NVIDIA GPU with at least the following specifications. These estimations assume a single GPU, but you can also use multiple GPUs with model parallelism to reduce per-GPU memory requirements by configuring `--nnodes` and`--nproc-per-node` in the fine-tune start shell script. 
+
+| Mode               | Memory Required | Example GPU              |
+| ------------------ | --------------- | ------------------------ |
+| Inference          | > 8 GB          | RTX 3090 / RTX 4090      |
+| Fine-Tuning (Full) | > 70 GB         | A100 (80GB) / H20 (96GB) |
+
+#### Installation
 
 ```
-OpenGalaxeaDataset = {
-    "episode_metadata": {
-        "file_path": tf.Text,  # path to the original data file
-    },
-    "steps": {
-        "is_first": tf.Scalar(dtype=bool),  # true on first step of the episode
-        "is_last": tf.Scalar(dtype=bool),  # true on last step of the episode
+git clone https://github.com/OpenGalaxea/G0
+conda create -n g0 python=3.10 -y 
+conda activate g0
 
-        "language_instruction": tf.Text,  # language instruction, format: "high level"@"low level chinese"@"low level english"
-        "observation": {
-            "base_velocity": tf.Tensor(3, dtype=float32),   # robot base velocity
-            "gripper_state_left": tf.Tensor(1, dtype=float32),  # left gripper state, 0-close and 100-open
-            "gripper_state_right": tf.Tensor(1, dtype=float32), # right gripper state, 0-close and 100-open
-            "depth_camera_wrist_left": tf.Tensor(224, 224, 1, dtype=uint16),  # wrist camera depth left viewpoint, unit: mm
-            "depth_camera_wrist_right": tf.Tensor(224, 224, 1, dtype=uint16),  # wrist camera depth right viewpoint, unit: mm
-            "image_camera_head": tf.Tensor(224, 224, 3, dtype=uint8), # head camera RGB viewpoint
-            "image_camera_wrist_left": tf.Tensor(224, 224, 3, dtype=uint8), # wrist camera RGB left viewpoint
-            "image_camera_wrist_right": tf.Tensor(224, 224, 3, dtype=uint8), # wrist camera RGB right viewpoint
-            "joint_position_arm_left": tf.Tensor(6, dtype=float32), # joint positions of the left arm
-            "joint_position_arm_right": tf.Tensor(6, dtype=float32), # joint positions of the right arm
-            "joint_position_torso": tf.Tensor(4, dtype=float32), # joint positions of the torso
-            "joint_velocity_arm_left": tf.Tensor(6, dtype=float32), # joint velocities of the left arm
-            "joint_velocity_arm_right": tf.Tensor(6, dtype=float32), # joint velocities of the right arm
-            "last_action": tf.Tensor(26, dtype=float32), # history of the last action
-        },
-        # action dimensions:
-        # 26 = 6 (left arm) + 1 (left gripper) + 6 (right arm) + 1 (right gripper) + 6 (torso) + 6 (base)
-        "action": tf.Tensor(26, dtype=float32),  # robot action, consists of [6x joint velocities, 1x gripper position]
-        "segment_idx": tf.Scalar(dtype=int32),  # index of the segment in the episode
-        "variant_idx": tf.Scalar(dtype=int32), 
-    },
-}
+# Install Pacakges from Code
+git clone https://github.com/kvablack/dlimp
+cd dlimp
+pip install -e .
+
+# Install Packages from Pip
+cd G0
+pip install -e .
 ```
 
-### Example
+#### Model Checkpoints
 
-We provide an example script to load our RLDS dataset and transform some episodes into mp4 video format (head camera).
+| Model                  | Use Case    | Description                       | Checkpoint Path                                              |
+| ---------------------- | ----------- | --------------------------------- | ------------------------------------------------------------ |
+| model_pre              | Fine-Tuning | Base G0-VLA Model for fine-tuning | https://huggingface.co/OpenGalaxea/G0-VLA/blob/main/model_pre.pt |
+| More Models come soon! |             |                                   |                                                              |
 
-```python
-import tensorflow_datasets as tfds
-import tyro
-import os
-import imageio
-from tqdm import tqdm
+#### Fine-Tuning Base Models on Galaxea R1Lite Robot
 
-def main(
-    dataset_name: str, 
-    data_dir: str, 
-    output_dir: str = "extracted_videos",
-    num_trajs: int = 10
-):
-    ds = tfds.load(dataset_name, split='train', data_dir=data_dir)
-    print(f"Successfully loaded dataset: {dataset_name}")
+To fine-tune our model with your own data, you should follow three steps:
 
-    os.makedirs(output_dir, exist_ok=True)
-    print(f"Videos will be saved to: {output_dir}")
+1. Convert your data to a RLDS dataset. You can follow data converter open-sourced by  [OpenVLA](https://github.com/moojink/rlds_dataset_builder).
 
-    for i, episode in enumerate(tqdm(ds.take(num_trajs), total=num_trajs, desc="Exporting videos")):
-        head_frames = []
-        
-        for step in episode['steps']:
-            head_rgb_image = step['observation']['image_camera_head'].numpy()
-            head_frames.append(head_rgb_image)
-            instruction = step['language_instruction'].numpy().decode('utf-8')
+2. Defining training configs and running training (**Code coming soon**):
 
-        video_path = os.path.join(output_dir, f"traj_{i}_head_rgb.mp4")
-        try:
-            imageio.mimsave(video_path, head_frames, fps=15)
-            print(f"Saved video for episode {i} to {video_path} with instruction: '{instruction}'")
-        except Exception as e:
-            print(f"Error saving video for episode {i}: {e}")
+   **Defining Training Configs**
 
-if __name__ == '__main__':
-    tyro.cli(main)
-```
+   You can find a training config template at `vla/config/r1lite/0825_stage2_scratch_500h_to1_ta32_3cam_bs1024_15epochs.yml`
+
+   **Running Training**
+
+   ```
+   cd G0
+   conda activate g0
+   
+   # For Single Nodes Post-Training
+   torchrun \
+       --standalone \
+       --nnodes 1 \
+       --nproc-per-node <num-gpus> \
+       finetune.py --config <your-training-config-path>
+
+3. Running Inference in with real world with Galaxea R1Lite Robot **(ROS1)**
+
+   See detailed commands and launch methods [here](docs/inference.md).
 
 
+#### Precision
+
+1. Inference: Support either BF16 or FP32. You can change data type by specifying `dtype` parameter while launching inference.
+2. Training: Support either BF16 or FP32. You can enable BF16 by setting `enable_bf16: True` in the training config file. Our open-sourced pretrained weight is trained with BF16.
+
+## Troubleshooting
+
+We will collect common issues and their solutions here. If you encounter an issue, please check here first. If you can't find a solution, please file an issue on the repo.
+
+|     Issue     |                          Resolution                          |
+| :-----------: | :----------------------------------------------------------: |
+| About dataset | Step in our dataset is 15 HZ, and image resolution in RLDS is 224 x 224. But the lerobot format dataset with full resolution (1280 x 720) will come soon. |
+|               |                                                              |
+|               |                                                              |
 
 
 ## 📜 Citation
@@ -154,3 +157,4 @@ If you use our dataset or models, please cite:
   journal={arXiv preprint arXiv:2509.00576v1},
   year={2025}
 }
+```

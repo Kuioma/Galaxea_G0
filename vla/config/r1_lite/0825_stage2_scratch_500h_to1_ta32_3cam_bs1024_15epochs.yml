@@ -1,0 +1,90 @@
+seed: 7
+
+vla_path: paligemma-3b-pt-224
+
+DATASET:
+  window_size: ${MODEL.cond_steps} # should be ${MODEL.cond_steps}
+  future_action_window_size: ${eval:'${MODEL.horizon_steps} - 1'} # should be ${MODEL.horizon_steps} - 1
+  camera_views: ["head", "wrist_left", "wrist_right"]
+  share_datasets_statistics: True
+  use_pretrained_data_stats: False
+  action_proprio_normalization_type: normal
+
+model_family: galaxea_zero
+MODEL: 
+  name: vla.galaxea_zero.GalaxeaZero
+  vla_name: "paligemma-3b-pt-224"
+  load_inside: True
+  pretrained_model_path: # Enter path of paligemma weights if training from scratch
+  input_ids: True
+  action_expert_only: False # FIXME
+  image_token_index: 257152
+  vocab_size: 257216
+  pad_token_id: 0
+  cond_steps: 1 # len proprio
+  horizon_steps: 32
+  action_dim: 26 # 2 x [QPOS (6) + gripper (1)] + Torso Velocity (6) + Chassis Velocity (6)
+  proprio_dim: 21  # 2 * [QPOS (6) + gripper (1)] + 4 (torso) + 3 (base vel)
+  max_text_tokens: 80 # 80 for pre-2
+  max_seq_len: ${eval:'${MODEL.num_input_images} * ${MODEL.vision.num_image_tokens} + ${MODEL.max_text_tokens}'} 
+  max_image_text_tokens: ${MODEL.max_seq_len} # = ${max_seq_len}
+  
+  flow_sampling: beta
+  num_inference_steps: 10
+  final_action_clip_value: null
+
+  action_expert_adaptive_mode: null
+  num_input_images: ${eval:'${MODEL.cond_steps} * len(${DATASET.camera_views})'}
+
+  predict_depth: False
+  vision:
+    name: vla.model.paligemma.siglip.SiglipVisionModel
+    hidden_size: 1152 # siglip
+    intermediate_size: 4304
+    num_hidden_layers: 27
+    num_attention_heads: 16
+    num_channels: 3
+    image_size: 224
+    patch_size: 14
+    layer_norm_eps: 0.000001
+    attention_dropout: 0.0
+    num_image_tokens: 256
+    use_lora: False
+  vision_projector:
+    name: vla.model.paligemma.siglip.PaliGemmaMultiModalProjector
+    vision_config:
+      hidden_size: 1152
+      projection_dim: 2048
+    use_lora: False
+  joint:
+    name: vla.model.g0.joint_model.JointModel
+    action_expert_adaptive_mode: null
+    mixture:
+      vlm:   # gemma
+        hidden_size: 2048
+        intermediate_size: 16384
+        use_final_norm: False
+        cache: True
+        use_lora: False
+      proprio:
+        hidden_size: 1024
+        intermediate_size: 4096
+        use_final_norm: True
+        cache: True
+        use_lora: False
+      action:
+        hidden_size: 1024
+        intermediate_size: 4096
+        use_final_norm: True
+        cache: False
+        use_lora: False
+    num_hidden_layers: 18
+    num_attention_heads: 8
+    num_key_value_heads: 1
+    head_dim: 256
+    max_position_embeddings: 8192
+    rms_norm_eps: 0.000001
+    rope_theta: 10000.0
+    attention_bias: False
+    attention_dropout: 0.0
+    pad_token_id: 0
