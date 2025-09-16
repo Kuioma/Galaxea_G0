@@ -80,7 +80,7 @@ To run our pretrained models in this repository, you will need an NVIDIA GPU wit
 
 ```
 git clone https://github.com/OpenGalaxea/G0
-conda create -n g0 python=3.10 -y 
+conda env create -f glx_vla.yml
 conda activate g0
 
 # Install Pacakges from Code
