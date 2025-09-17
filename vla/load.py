@@ -43,7 +43,7 @@ def load(
     HF_HUB_REPO = f'google/{model_id_or_path}'
     logger.info(f"Downloading `{(model_id_or_path)} from HF Hub")
     with logger.local_zero_first():
-        config_json = hf_hub_download(repo_id=HF_HUB_REPO, token=hf_token, filename="./config.json", cache_dir=cache_dir)
+        config_json = hf_hub_download(repo_id=HF_HUB_REPO,token=hf_token, filename="./config.json", cache_dir=cache_dir)
 
     # Load Model Config from `config.json`
     with open(config_json, "r") as f:
@@ -141,6 +141,7 @@ def load_from_checkpoint(
     load_inside = model_kwargs['model_cfg'].get('load_inside', False)
 
     model_config = PaliGemmaConfig.from_pretrained('google/paligemma-3b-pt-224', local_files_only=True)
+        
     processor = PaliGemmaProcessor.from_pretrained(HF_HUB_REPO, token=hf_token, local_files_only=True)
 
     # Load VLM using `from_pretrained` (clobbers HF syntax... eventually should reconcile)

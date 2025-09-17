@@ -41,7 +41,7 @@ class GemmaRotaryEmbedding(nn.Module):
     def forward(self, x, position_ids, seq_len=None):
         # x: [bs, num_attention_heads, seq_len, head_size]
         # Copy the inv_freq tensor for batch in the sequence
-        # [yc] put this in the forward for dtype safety
+        # put this in the forward for dtype safety
         inv_freq = 1.0 / (
             self.base
             ** (torch.arange(0, self.dim, 2, dtype=torch.int64).float() / self.dim)

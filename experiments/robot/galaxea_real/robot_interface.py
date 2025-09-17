@@ -13,7 +13,6 @@ from enum import Enum
 from geometry_msgs.msg import TwistStamped
 from loguru import logger
 from sensor_msgs.msg import CompressedImage, JointState
-from vlm_node.msg import VLMPubMsg
 from utils import log_utils, msg_utils
 
 R1_LITE = "R1_LITE"
@@ -117,18 +116,10 @@ class GalaxeaInterface:
                 message_time=msg.header.stamp.to_sec()
             )
         )
-    def _vlm_instruction_callback(self, msg: VLMPubMsg):
-        if not len(msg.lower_prompt_list):
-            return
-        low_level_instruction = msg.lower_prompt_list[0]
-        self.lastest_instruction = f"[low]:{low_level_instruction}"
 
     def _init_topics(self):
         self.subscribers = {}
         self.publishers = {}
-        self.subscribers["vlm_subscriber"] = rospy.Subscriber(
-            "vlm_node/out2vla", VLMPubMsg, self._vlm_instruction_callback
-        )
         config_topic = self.config.topic
         for topic_dict, topic_type, topic_callback, deque_maxlen in zip(
             [config_topic.joint_state_input, config_topic.image_input],

@@ -8,13 +8,13 @@ import tyro
 from robot_interface import GalaxeaInferfaceConfig
 from galaxea_real_utils import get_wrapped_env
 
-from experiments.policy_r1_lite import PiZeroPolicy
+from experiments.policy_r1_lite import GalaxeaZeroPolicy
 
 INSTRUCTION_PATH = Path(__file__).resolve().parent / "instruction.txt"
 
 def main(interface_config: GalaxeaInferfaceConfig, run_dir: Path, ckpt_id: int, num_action_steps: int = 16, dtype: str = 'fp32'):
     env = get_wrapped_env(interface_config)
-    policy = PiZeroPolicy(
+    policy = GalaxeaZeroPolicy(
         cfg_file=str(run_dir / "config.yaml"),
         checkpoint_path=str(run_dir / f"model_{ckpt_id}.pt"),
         dtype=dtype,

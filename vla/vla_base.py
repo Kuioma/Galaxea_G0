@@ -26,31 +26,22 @@ class VLABase(nn.Module):
         unnorm_key: Optional[str] = None, 
         unnorm_type: Optional[Literal["q99", "normal", "max"]] = "q99",
         select_keys: Optional[List[str]] = ["primary"],
-        depths: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None,
     ) -> Tuple:
         image_transform, tokenizer = self.image_transform, self.tokenizer
 
         imgs = []
-        depth_imgs = []
 
         for cam in select_keys:
             single_views = images[cam]
             assert len(single_views) == self.model.cond_steps, f"# Images should be equal to self.cond_steps for {cam}"
             imgs.append(single_views)
 
-            if depths is not None:
-                single_view_depths = depths[f"depth_{cam}"]
-                assert len(single_view_depths) == self.model.cond_steps, f"# Depths should be equal to window_size for {cam}"
-                depth_imgs.append(single_view_depths)
-
         # [[c0_t0, c0_t1, c0_t2], ..., [cn_t0, cn_t1, cn_t2], ...] -> [[c0_t0, c1_t0, ..., cn_t0], ..., [c0_to, ..., cn_to]]
         imgs = list(zip(*imgs))
         # [[c0_t0, c1_t0, ..., cn_t0], ..., [c0_to, ..., cn_to]] -> [c0_t0, c1_t0, ..., cn_t0, ..., c0_to, ..., cn_to]
         imgs = [i for sublist in imgs for i in sublist] # flatten
-        if depths is not None:
-            depth_imgs = list(zip(*depth_imgs))
-            depth_imgs = [i for sublist in depth_imgs for i in sublist] # flatten
-        
+
+
         # Build VLA Prompt
         prompt_text = instruction.lower().strip()
         # Prepare Inputs
@@ -63,10 +54,6 @@ class VLABase(nn.Module):
         pixel_values = torch.cat(pixel_values, dim=0) # (n, c, h, w), n = window_size * len(camera_views)
         pixel_values = pixel_values.unsqueeze(0).to(self.device) # (1, n, c, h, w)
         
-        if depths is not None:
-            depth_imgs = [torch.tensor(np.array(img)) for img in depth_imgs] #[(h, w, 1)]
-            depth_imgs = torch.stack(depth_imgs, dim=0).unsqueeze(0).to(pixel_values)# (bs, n, h, w, 1)
-
         # process proprio
         if not isinstance(proprio, torch.Tensor):
             proprio = torch.tensor(proprio, dtype=torch.float32)
@@ -97,7 +84,6 @@ class VLABase(nn.Module):
             "input_ids": input_ids,
             "pixel_values": pixel_values,
             "proprio": proprio,
-            "depth_imgs": depth_imgs if depths is not None else None,
         }
 
     def infer(self, obs: Dict) -> Dict:
@@ -109,7 +95,6 @@ class VLABase(nn.Module):
         images: Dict[str, List[np.ndarray]], 
         instruction: str, 
         proprio: Union[np.ndarray, torch.Tensor], 
-        depths: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None,
         unnorm_key: Optional[str] = None,
         unnorm_type: Optional[Literal["q99", "normal", "max"]] = "q99",
         select_keys: Optional[List[str]] = ["primary"],
@@ -130,10 +115,9 @@ class VLABase(nn.Module):
 
         """
         images = {k: [process_single_image(i, center_crop=center_crop) for i in imgs] for k, imgs in images.items()}
-        depths = {k: [process_single_depth(i, center_crop=center_crop) for i in imgs] for k, imgs in depths.items()} if depths is not None else None
 
         batch = self.build_inputs(
-            images, instruction, proprio, unnorm_key, unnorm_type, select_keys, depths)
+            images, instruction, proprio, unnorm_key, unnorm_type, select_keys)
         
         if isinstance(autocast_dtype, str):
             dtype = getattr(torch, autocast_dtype)
@@ -152,7 +136,6 @@ class VLABase(nn.Module):
                 pixel_values=batch["pixel_values"].to(dtype=autocast_dtype),
                 attention_mask=torch.ones_like(batch["input_ids"]).bool(),
                 proprio=batch["proprio"].to(dtype=autocast_dtype),
-                depths=batch["depth_imgs"] if "depth_imgs" in batch else None,
                 inference_mode=True,
                 verbose=False,
             )
@@ -160,7 +143,7 @@ class VLABase(nn.Module):
         if isinstance(actions, dict):
             actions = actions["actions"]
 
-        # [yc] following code only works for float32.
+        # following code only works for float32.
         actions = actions.to(torch.float32)
         actions = actions.squeeze(0)[..., -self.get_action_dim(unnorm_key):].cpu().numpy()
 
@@ -169,7 +152,7 @@ class VLABase(nn.Module):
         mask = action_norm_stats.get("mask", np.ones_like(action_norm_stats["q01"], dtype=bool))
         if unnorm_type == "q99":
             action_high, action_low = np.array(action_norm_stats["q99"]), np.array(action_norm_stats["q01"])
-            actions = 0.5 * (actions + 1) # [Yuan]: from [-1, +1] to [0, 1], including gripper
+            actions = 0.5 * (actions + 1) # from [-1, +1] to [0, 1], including gripper
             actions = np.where(
                 mask,
                 actions * (action_high[np.newaxis,:] - action_low[np.newaxis,:]) + action_low[np.newaxis,:],
@@ -177,7 +160,7 @@ class VLABase(nn.Module):
             )
         elif unnorm_type == "max":
             action_max, action_min = np.array(action_norm_stats["max"]), np.array(action_norm_stats["min"])
-            actions = 0.5 * (actions + 1) # [Yuan]: from [-1, +1] to [0, 1], including gripper
+            actions = 0.5 * (actions + 1) # from [-1, +1] to [0, 1], including gripper
             actions = np.where(
                 mask,
                 actions * (action_max[np.newaxis,:] - action_min[np.newaxis,:]) + action_min[np.newaxis,:],
@@ -224,21 +207,11 @@ class VLABase(nn.Module):
         unnorm_key = self._check_unnorm_key(self.norm_stats, unnorm_key)
 
         return self.norm_stats[unnorm_key]["action"]
-    
+
     @property
     def device(self) -> torch.device:
         """Borrowed from `transformers.modeling_utils.py` -- checks parameter device; assumes model on *ONE* device!"""
         return next(self.parameters()).device
-
-def process_single_depth(depth, center_crop=False):
-    if depth.dtype == np.uint16:
-        depth = depth.astype(np.float32) / 1000.0
-    
-    if center_crop:
-        depth = tf.image.convert_image_dtype(depth, tf.float32)
-        depth = crop_and_resize(depth, 0.9, 1)
-
-    return depth.numpy()
 
 def process_single_image(image, center_crop=False):
     image = Image.fromarray(image)
@@ -316,4 +289,5 @@ def crop_and_resize(image, crop_scale, batch_size):
 
             
 if __name__ == '__main__':
+
     pass

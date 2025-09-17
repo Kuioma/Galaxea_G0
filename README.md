@@ -24,14 +24,14 @@ We are gradually open-sourcing the dataset and model. Progress will be updated h
   - Release **G0-VLA pretrained model weights**.
   - Now our pretained weight is available at [Huggingface](https://huggingface.co/OpenGalaxea/G0-VLA) and [Modelscope](https://www.modelscope.cn/models/Galaxea/G0-VLA)!
 
-- [x] **Sep16, 2025**  
+- [x] **Sep 17, 2025**  
   - Release **G0-VLA real-robot [inference code](docs/inference.md)**.
+
+- [x] **Sep 17, 2025**  
+  - Release **G0-VLA fine-tuning code**.
 
 - [ ] **Mid-Sep, 2025**  
   - Release **Lerobot Format Galaxea Open-World Dataset**.
-
-- [ ] **Mid-Sep, 2025**  
-  - Release **G0-VLA fine-tuning code**.
 
 - [ ] **Later in 2025**  
   - 🔮 More updates to come (extended datasets, improved models, additional tools).
@@ -87,10 +87,6 @@ conda activate g0
 git clone https://github.com/kvablack/dlimp
 cd dlimp
 pip install -e .
-
-# Install Packages from Pip
-cd G0
-pip install -e .
 ```
 
 #### Model Checkpoints
@@ -110,7 +106,7 @@ To fine-tune our model with your own data, you should follow three steps:
 
    **Defining Training Configs**
 
-   You can find a training config template at `vla/config/r1lite/0825_stage2_scratch_500h_to1_ta32_3cam_bs1024_15epochs.yml`
+   You can find a training config template at `vla/config/r1_lite/r1lite_fine_tune_example.yml`
 
    **Running Training**
 
@@ -144,6 +140,12 @@ We will collect common issues and their solutions here. If you encounter an issu
 | About dataset | Step in our dataset is 15 HZ, and image resolution in RLDS is 224 x 224. But the lerobot format dataset with full resolution (1280 x 720) will come soon. |
 |               |                                                              |
 |               |                                                              |
+
+
+
+## Acknowledgement
+
+This project builds upon prior work from the open-source community. The implementation was inspired by [open-pi-zero](https://github.com/allenzren/open-pi-zero), [OpenVLA](https://github.com/openvla/openvla), [Octo](https://github.com/octo-models/octo), and [Openpi](https://github.com/Physical-Intelligence/openpi), and the experiments make use of datasets including [OXE](https://github.com/google-deepmind/open_x_embodiment), [RDT](https://github.com/thu-ml/RoboticsDiffusionTransformer), [BridgeV2](https://github.com/rail-berkeley/bridge_data_v2), and [DROID](https://github.com/droid-dataset/droid). We sincerely thank the authors of these projects for making their code and data publicly available.
 
 
 ## 📜 Citation

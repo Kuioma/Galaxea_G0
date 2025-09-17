@@ -65,7 +65,6 @@ def forward_mixture_layers(
             layer_idx,
             "input_layernorm",
             embeds_all[name],
-            # time_cond,
         )
     hidden_states_pre_attn = hidden_states_input_norm
 
@@ -98,7 +97,6 @@ def forward_mixture_layers(
             layer_idx,
             "post_attention_layernorm",
             hidden_states_pre_post_attn[name],
-            # time_cond,
         )
     hidden_states_pre_mlp = hidden_states_post_post_attn
 
@@ -115,9 +113,7 @@ def forward_mixture_layers(
     # [Batch_Size, Seq_Len, Hidden_Size]
     hidden_states_final = {}
     for name in active_mixture_names:
-        hidden_states_final[name] = (
-            residuals_pre_post_attn[name] + hidden_states_pre_final_res[name]
-        )
+        hidden_states_final[name] = residuals_pre_post_attn[name] + hidden_states_pre_final_res[name]
     return hidden_states_final
 
 
@@ -146,9 +142,7 @@ def forward_mixture_attn(
     query_states_all = {}
     for name in active_mixture_names:
         # [Batch_Size, Num_Heads_Q, Seq_Len, Head_Dim]
-        query_states = mixtures[name].attn_func(
-            "forward_q_proj", layer_idx, hidden_states_all[name]
-        )
+        query_states = mixtures[name].attn_func("forward_q_proj", layer_idx, hidden_states_all[name])
         query_states_all[name] = query_states
 
     # use kv caches from non-active mixtures
@@ -175,25 +169,17 @@ def forward_mixture_attn(
             )  # note: rope already applied before they were cached
 
         # always add to cache in append mode, or kv cache does not have the layer yet (in no_append mode)
-        flag_to_cache_mixture = (
-            name in kv_caches and not kv_caches[name].has_item(layer_idx)
-        ) or cache_mode == "append"
+        flag_to_cache_mixture = (name in kv_caches and not kv_caches[name].has_item(layer_idx)) or cache_mode == "append"
 
         # calculate kv for new tokens if in append mode or this layer is not cached
         key_states_new, value_states_new = None, None
         flag_calc_new_kv = not flag_cached_mixture or cache_mode == "append"
-        assert (
-            flag_cached_mixture or flag_calc_new_kv
-        ), "Cannot skip new kv calculation while also not using cache!"
+        assert flag_cached_mixture or flag_calc_new_kv, "Cannot skip new kv calculation while also not using cache!"
         if flag_calc_new_kv:
             hidden_states = hidden_states_all[name]
             # [Batch_Size, Num_Heads_KV, Seq_Len, Head_Dim]
-            key_states_new = mixtures[name].attn_func(
-                "forward_k_proj", layer_idx, hidden_states
-            )
-            value_states_new = mixtures[name].attn_func(
-                "forward_v_proj", layer_idx, hidden_states
-            )
+            key_states_new = mixtures[name].attn_func("forward_k_proj", layer_idx, hidden_states)
+            value_states_new = mixtures[name].attn_func("forward_v_proj", layer_idx, hidden_states)
 
             # [Batch_Size, Num_Heads_KV, Seq_Len, Head_Dim]
             key_states_new = mixtures[name].attn_func(
@@ -213,9 +199,7 @@ def forward_mixture_attn(
 
         # always apply rope to Q
         # [Batch_Size, Num_Heads_Q, Seq_Len, Head_Dim]
-        query_states = mixtures[name].attn_func(
-            "forward_apply_rotary_emb", layer_idx, query_states, rope_cos, rope_sin
-        )
+        query_states = mixtures[name].attn_func("forward_apply_rotary_emb", layer_idx, query_states, rope_cos, rope_sin)
         query_states_all[name] = query_states
 
         # assign K and V carefully for this active mixture
@@ -264,9 +248,7 @@ def forward_mixture_attn(
     attn_weights = attn_weights + attention_mask
     # [Batch_Size, Num_Heads_Q, Full_Seq_Len, Full_Seq_Len]
     with torch.autocast("cuda", enabled=False):
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
-            query_states.dtype
-        )
+        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
     attn_weights = nn.functional.dropout(
         attn_weights,
         p=attention_dropout,
@@ -282,16 +264,12 @@ def forward_mixture_attn(
 
     # Split into the different mixtures
     attn_outputs = torch.split(attn_output, q_lens, dim=1)
-    attn_outputs = {
-        key: value for key, value in zip(active_mixture_names, attn_outputs)
-    }
+    attn_outputs = {key: value for key, value in zip(active_mixture_names, attn_outputs)}
 
     # Multiply by W_o. [Batch_Size, Seq_Len_Q, Hidden_Size]
     attn_outputs_final = {}
     for name in active_mixture_names:
-        attn_outputs_final[name] = mixtures[name].attn_func(
-            "forward_o_proj", layer_idx, attn_outputs[name]
-        )
+        attn_outputs_final[name] = mixtures[name].attn_func("forward_o_proj", layer_idx, attn_outputs[name])
     return attn_outputs_final
 
 
@@ -315,14 +293,14 @@ class JointModel(nn.Module):
 
             num_params = sum(p.numel() for p in self.mixtures[mixture_name].parameters())
             if num_params >= 1e9:
-                unit = 'B'
+                unit = "B"
                 num_params_display = num_params / 1e9
             else:
-                unit = 'M'
+                unit = "M"
                 num_params_display = num_params / 1e6
 
             logger.info("[bold]{}[/] number of parameters: [bold]{:.2f}{}[/]".format(mixture_name, num_params_display, unit))
-        
+
         self.mixture_names = list(config.mixture.keys())
 
     def init_mixture_caches(self):
@@ -380,10 +358,7 @@ class JointModel(nn.Module):
         # [Batch_Size, Seq_Len, Hidden_Size]
         hidden_states_all = {}
         for name in active_mixture_names:
-            hidden_states_all[name] = self.mixtures[name].forward_norm(
-                embeds_all[name], 
-                # time_cond
-            )  # can be None
+            hidden_states_all[name] = self.mixtures[name].forward_norm(embeds_all[name], time_cond)  # can be None
         if return_caches:
             if return_intermediate_layers:
                 return hidden_states_all, kv_caches, intermediates

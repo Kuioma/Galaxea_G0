@@ -28,8 +28,8 @@ CAMERA_VIEW_NAME_LUT = {
 
 import time
 
-class PiZeroPolicy:
-    def __init__(self, cfg_file, checkpoint_path, seed=42, device="cuda", dtype="fp32", use_torch_compile=False):
+class GalaxeaZeroPolicy:
+    def __init__(self, cfg_file, checkpoint_path, seed=42, device="cuda", dtype="fp32", use_torch_compile=False, use_remote=False, port=8000):
         cfg = OmegaConf.load(cfg_file)
         OmegaConf.resolve(cfg)
         self.cfg = cfg
@@ -42,7 +42,7 @@ class PiZeroPolicy:
             self.dtype = torch.float32
         else:
             raise ValueError(f"Unsupported dtype: {dtype}")
-        
+
         set_seed_everywhere(seed)
 
         self.device = device
@@ -54,9 +54,9 @@ class PiZeroPolicy:
         self.proprio_dim = cfg.MODEL.proprio_dim
 
         assert cfg.model_family == "galaxea_zero"
-        
-        model = load_from_checkpoint(checkpoint_path, 
-                                    load_for_training=False, 
+
+        model = load_from_checkpoint(checkpoint_path,
+                                    load_for_training=False,
                                     action_expert_only=cfg.MODEL.action_expert_only,
                                     model_cfg=cfg.MODEL)
         self.client = None
@@ -70,9 +70,8 @@ class PiZeroPolicy:
 
         # hard-coded for now
         self.img_resize_size = (224, 224)
-        
-        self.unnorm_key = "__total__" if cfg.DATASET.get("share_datasets_statistics", False) \
-            else cfg.dataset_name
+
+        self.unnorm_key = "__total__" if cfg.DATASET.get("use_pretrained_data_stats", False) else cfg.dataset_name
         self.unnorm_type = cfg.DATASET.get("action_proprio_normalization_type", "q99")
 
     @log_execution_time()
@@ -107,7 +106,7 @@ class PiZeroPolicy:
         else:
             assert isinstance(obs, list)
         assert len(obs) == self.To, f"Expected {self.To} frame of observations, got {len(obs)}"
-        
+
         new_obs = []
         for ob in obs:
             for k, v in ob.items():
@@ -132,12 +131,12 @@ class PiZeroPolicy:
                 image = ob[cam]
                 if image.shape[-1] != 3:
                     image = np.transpose(image, (1, 2, 0)) # from (c, h, w) to (h, w, c)
-                
+
                 image = tf.image.convert_image_dtype(image, tf.uint8)
                 image = tf.image.resize(image, self.img_resize_size, method="lanczos3", antialias=True)
                 image = tf.cast(tf.clip_by_value(tf.round(image), 0, 255), tf.uint8)
                 imgs[cam].append(image.numpy())
-        
+
         ################# Proprio #################
         # 1. construct proprio
         proprios = []
@@ -157,13 +156,13 @@ class PiZeroPolicy:
             base_velocity = obs[i]["/hdas/feedback_chassis"]
 
             last_action = obs[i]["last_action"]
-           
+
             p = np.concatenate([
-                joint_position_arm_left, 
-                # joint_velocity_arm_left, 
-                [gripper_state_left], 
+                joint_position_arm_left,
+                # joint_velocity_arm_left,
+                [gripper_state_left],
                 joint_position_arm_right,
-                # joint_velocity_arm_right, 
+                # joint_velocity_arm_right,
                 [gripper_state_right],
                 joint_position_torso,
                 base_velocity,
@@ -172,7 +171,7 @@ class PiZeroPolicy:
 
         ################# Forward #################
         if self.client is not None:
-            
+
             while True:
                 try:
                     actions = self.client.infer(
@@ -209,7 +208,7 @@ class PiZeroPolicy:
                 center_crop=center_crop,
                 autocast_dtype=self.dtype
             )
-            
+
         # 4. denormalize grippers
         action_arm_left = actions[:, :6]
         action_gripper_left = actions[:, 6:7]
@@ -223,7 +222,7 @@ class PiZeroPolicy:
         if binarize_gripper:
             action_gripper_left = (action_gripper_left > 0.5).astype(np.float32)
             action_gripper_right = (action_gripper_right > 0.5).astype(np.float32)
-        
+
         # see prismatic.vla.datasets.rlds.oxe.transforms.galaxea_dataset_transform
         action_gripper_left = action_gripper_left * (100.0 - 0.0) + 0.0 
         action_gripper_right = action_gripper_right * (100.0 - 0.0) + 0.0
@@ -233,7 +232,7 @@ class PiZeroPolicy:
             action_arm_right, action_gripper_right,
             action_torso, action_chassis
         ], axis=-1) # (Ta, 26)
-        
+
         return actions
 
 

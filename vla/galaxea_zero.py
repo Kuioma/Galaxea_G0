@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from transformers.utils import ModelOutput
 
 from vla.vla_base import VLABase
-from .model.g0.pizero import PiZero
+from .model.g0.galaxeazero import GalaxeaZero
 
 import logging
 
@@ -42,7 +42,7 @@ class GalaxeaModelOutput(ModelOutput):
     loss: Optional[torch.FloatTensor] = None
     logits: torch.FloatTensor = None
     loss_dict: Optional[Dict[str, torch.FloatTensor]] = None
-    
+
 @dataclass
 class FakeTensor():
     shape: Tuple[int] = None
@@ -51,24 +51,28 @@ class FakeTensor():
     requires_grad: bool = None
 
 
-class GalaxeaZero(VLABase):
+class GalaxeaZeroWrapper(VLABase):
     def __init__(
         self,
         model_id: str,
         config: PaliGemmaConfig,
         enable_mixed_precision_training: bool = True,
+        local_files_only: bool = True,
         action_expert_only: bool = False,
         model_cfg: DictConfig = None,
         **kwargs,
     ) -> None:
         super().__init__()
-        
+
         self.config = config
-        
+
         self.model_family, self.model_id = 'galaxea_zero', model_id
         self.norm_stats = {}
-        
-        self.model = PiZero(model_cfg)
+
+        self.model: GalaxeaZero = get_obj_from_str(model_cfg.get("model_name", "vla.model.g0.galaxeazero.GalaxeaZero"))(
+            model_cfg
+        )
+
         self.pad_token_id = 0
         # Instance Attributes for a generic VLM
         self.all_module_keys, self.trainable_module_keys = None, None
@@ -84,7 +88,7 @@ class GalaxeaZero(VLABase):
         flow_beta = 1
         self.flow_t_max = 1 - 0.001
         self.flow_beta_dist = torch.distributions.Beta(flow_alpha, flow_beta)
-        
+
         self.action_expert_only = action_expert_only  
         self.model_config = model_cfg  
         self.enable_mixed_precision_training = enable_mixed_precision_training
@@ -105,7 +109,7 @@ class GalaxeaZero(VLABase):
         enable_mixed_precision_training: bool = True,
         training: bool = True,
         **model_kwargs,
-    ) -> GalaxeaZero:
+    ) -> GalaxeaZeroWrapper:
         """Initialize a VLM from a pretrained checkpoint."""
         vlm = cls(
             model_id,
@@ -129,7 +133,7 @@ class GalaxeaZero(VLABase):
             vlm.eval()
 
         return vlm
-    
+
     @classmethod
     def from_checkpoint(
         cls,
@@ -143,7 +147,7 @@ class GalaxeaZero(VLABase):
         training: bool = True,
         strict: bool = True,
         **model_kwargs,
-    ) -> GalaxeaZero:
+    ) -> GalaxeaZeroWrapper:
         """Initialize a VLA from a pretrained checkpoint."""
         vlm = cls(
             model_id,
@@ -151,7 +155,7 @@ class GalaxeaZero(VLABase):
             enable_mixed_precision_training=enable_mixed_precision_training,
             **model_kwargs,
         )
-        
+
         new_state_dict = {}
         for k, v in state_dict.items():
             if "_orig_mod" in k:
@@ -174,7 +178,7 @@ class GalaxeaZero(VLABase):
             logger.warning(f"Missing Keys in checkpoint: {incompatable_keys.missing_keys}")
         if len(incompatable_keys.unexpected_keys) > 0:
             logger.warning(f"Unexpected Keys in checkpoint: {incompatable_keys.unexpected_keys}")
-        
+
         vlm.model.tie_action_proprio_weights()
         logger.info(f"Loading [bold blue]tokenizer and image processor[/] from Checkpoint")
         vlm.image_transform = ImageProcessorToTransform(image_processor)
@@ -206,13 +210,13 @@ class GalaxeaZero(VLABase):
 
         all_requires_grad_params = [p for p in self.parameters() if p.requires_grad]
         assert len(all_requires_grad_params) == sum([len(g['params']) for g in param_groups])
-        
+
         return param_groups
 
     @property
     def num_patches(self) -> int:
         return self.vision_backbone.vision_model.embeddings.num_patches
-    
+
     def sample_fm_time(self, bsz: int) -> torch.FloatTensor:
         if self.flow_sampling == "uniform":  # uniform between 0 and 1
             """https://github.com/gle-bellier/flow-matching/blob/main/Flow_Matching.ipynb"""
@@ -222,14 +226,14 @@ class GalaxeaZero(VLABase):
             z = self.flow_beta_dist.sample((bsz,))
             t = self.flow_t_max * (1 - z)  # flip and shift
         return t
-    
+
     def forward(
         self,
         *args,
         inference_mode=False,
         **kwargs
     ):
-        
+
         if inference_mode:
             was_training = self.training
             self.model.eval()
@@ -290,11 +294,11 @@ class GalaxeaZero(VLABase):
             t=t.to(dtype).to(device)
         )
         loss = sum(loss_dict.values())
-        
+
         outputs = GalaxeaModelOutput(loss=loss, loss_dict=loss_dict)        
-        
+
         return outputs
-    
+
     @torch.no_grad()
     def forward_inference(self,                    
                     input_ids: Optional[torch.LongTensor] = None,
@@ -302,20 +306,19 @@ class GalaxeaZero(VLABase):
                     pixel_values: Optional[torch.FloatTensor] = None,
                     proprio: Optional[torch.FloatTensor] = None,
                     **kwargs):
-        
+
         input_ids, attention_mask = self.pre_process_inputs(input_ids, attention_mask)
         if proprio.ndim == 2:
             proprio = proprio.unsqueeze(1)
-        
+
         assert pixel_values.shape[1] == self.num_input_images, \
             f"pixel_values.shape[1] ({pixel_values.shape[1]}) should be equal to self.num_input_images ({self.num_input_images})"
-        
+
         sampled_actions = self.model.infer_action(
             input_ids=input_ids,
             attention_mask=attention_mask,
             pixel_values=pixel_values,
             proprios=proprio,
-            depths=kwargs.get('depths', None),
         )
-        
+
         return sampled_actions

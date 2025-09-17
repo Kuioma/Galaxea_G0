@@ -54,22 +54,19 @@ class WarmUpCosineLRByIteration(LRScheduler):
         super(WarmUpCosineLRByIteration, self).__init__(optimizer, last_epoch)
 
     def get_lr(self):
-        # 如果在 warmup 阶段，学习率逐步增加
+        # If in the warmuop phase, linearly increase the learning rate
         if self.iteration < self.warmup_iterations:
             warmup_factor = (self.iteration + 1) / self.warmup_iterations
             return [base_lr * warmup_factor for base_lr in self.base_lrs]
-        
-        # 在 cosine decay 阶段，学习率逐步减少
+
         iteration_tensor = self.iteration - self.warmup_iterations
         total_iterations_tensor = self.total_iterations - self.warmup_iterations
-        
-        # 防止计算出的 cosine_factor 值过低，导致学习率变为零
+
         cosine_factor = 0.5 * (1 + math.cos(torch.pi * iteration_tensor / total_iterations_tensor))
-        
+
         return [base_lr*cosine_factor + self.min_lr * (1 - cosine_factor) for base_lr in self.base_lrs]
 
     def step(self, epoch=None):
-        # 每次调用 step 时，增加迭代次数
         self.iteration += 1        
         super().step(epoch)
 
@@ -118,7 +115,7 @@ def get_scheduler(
 
 def log_execution_time(logger=None):
     """Decorator to log the execution time of a function"""
-
+        
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -133,7 +130,7 @@ def log_execution_time(logger=None):
                     f"{func.__name__} took {elapsed_time:.2f} seconds to execute."
                 )
             return result
-
+            
         return wrapper
-
+    
     return decorator

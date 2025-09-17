@@ -40,10 +40,9 @@ class Mixture(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.layers = nn.ModuleList(
-            [MixtureDecoderLayer(config) for _ in range(config.num_hidden_layers)]
-        )
+        self.layers = nn.ModuleList([MixtureDecoderLayer(config) for _ in range(config.num_hidden_layers)])
 
+        self.adaptive_mode = None
         if config.use_final_norm:
             self.norm = GemmaRMSNorm(
                 config.hidden_size,
@@ -75,9 +74,11 @@ class Mixture(nn.Module):
     def forward_norm(
         self,
         x: torch.FloatTensor,
+        cond: Optional[torch.FloatTensor] = None,
     ) -> torch.FloatTensor | None:
         if hasattr(self, "norm"):
-            return self.norm(x)
+            args = [x] if self.adaptive_mode is None else [x, cond]
+            return self.norm(*args)
         else:
             return None
 
@@ -87,11 +88,7 @@ class MixtureDecoderLayer(nn.Module):
         super().__init__()
         self.self_attn = MixtureAttention(config)
 
-        self.mlp = GemmaMLP(
-            config, 
-            use_quantize=config.get("use_quantize", False), 
-            use_lora=config.get("use_lora", False),
-        )
+        self.mlp = GemmaMLP(config, use_quantize=config.use_quantize, use_lora=config.use_lora)
 
         self.input_layernorm = GemmaRMSNorm(
             config.hidden_size,
@@ -154,9 +151,7 @@ class MixtureAttention(nn.Module):
         # [Batch_Size, Seq_Len, Num_Heads_Q * Head_Dim]
         query_states = self.q_proj(x)
         # [Batch_Size, Num_Heads_Q, Seq_Len, Head_Dim]
-        query_states = query_states.view(
-            bsz, q_len, self.num_heads, self.head_dim
-        ).transpose(1, 2)
+        query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
         return query_states
 
     def forward_k_proj(self, x: torch.FloatTensor) -> torch.FloatTensor:
@@ -164,9 +159,7 @@ class MixtureAttention(nn.Module):
         # [Batch_Size, Seq_Len, Num_Heads_KV * Head_Dim]
         key_states = self.k_proj(x)
         # [Batch_Size, Num_Heads_KV, Seq_Len, Head_Dim]
-        key_states = key_states.view(
-            bsz, q_len, self.num_key_value_heads, self.head_dim
-        ).transpose(1, 2)
+        key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         return key_states
 
     def forward_v_proj(self, x: torch.FloatTensor) -> torch.FloatTensor:
@@ -174,23 +167,19 @@ class MixtureAttention(nn.Module):
         # [Batch_Size, Seq_Len, Num_Heads_KV * Head_Dim]
         value_states = self.v_proj(x)
         # [Batch_Size, Num_Heads_KV, Seq_Len, Head_Dim]
-        value_states = value_states.view(
-            bsz, q_len, self.num_key_value_heads, self.head_dim
-        ).transpose(1, 2)
+        value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         return value_states
 
     def forward_o_proj(self, x: torch.FloatTensor) -> torch.FloatTensor:
         return self.o_proj(x)
 
-    @torch.autocast("cuda", enabled=False) # Critical!!!
-    def forward_rotary_emb(
-        self, x: torch.FloatTensor, position_ids: torch.LongTensor
-    ) -> torch.FloatTensor:
+    @torch.autocast("cuda", enabled=False)  # Critical!!!
+    def forward_rotary_emb(self, x: torch.FloatTensor, position_ids: torch.LongTensor) -> torch.FloatTensor:
         # [Batch_Size, Seq_Len, Head_Dim], [Batch_Size, Seq_Len, Head_Dim]
         cos, sin = self.rotary_emb(x.float(), position_ids, seq_len=None)
         return cos, sin
 
-    @torch.autocast("cuda", enabled=False) # Critical!!!
+    @torch.autocast("cuda", enabled=False)  # Critical!!!
     def forward_apply_rotary_emb(
         self,
         states: torch.FloatTensor,
@@ -202,9 +191,7 @@ class MixtureAttention(nn.Module):
         states = apply_rotary_pos_emb(states, cos, sin)
         return states.to(orig_dtype)
 
-    def repeat_kv(
-        self, key_states: torch.FloatTensor, value_states: torch.FloatTensor
-    ) -> Tuple[torch.FloatTensor]:
+    def repeat_kv(self, key_states: torch.FloatTensor, value_states: torch.FloatTensor) -> Tuple[torch.FloatTensor]:
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
         return key_states, value_states
