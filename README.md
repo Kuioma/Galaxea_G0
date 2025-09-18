@@ -93,7 +93,7 @@ pip install -e .
 
 | Model                  | Use Case    | Description                       | Checkpoint Path                                              |
 | ---------------------- | ----------- | --------------------------------- | ------------------------------------------------------------ |
-| model_pre              | Fine-Tuning | Base G0-VLA Model for fine-tuning | https://huggingface.co/OpenGalaxea/G0-VLA/blob/main/model_pre.pt |
+| G0_3B_base              | Fine-Tuning | Base G0-VLA Model for fine-tuning | https://huggingface.co/OpenGalaxea/G0-VLA/blob/main/G0_3B_base.pt |
 | More Models come soon! |             |                                   |                                                              |
 
 #### Fine-Tuning Base Models on Galaxea R1Lite Robot
@@ -102,7 +102,7 @@ To fine-tune our model with your own data, you should follow three steps:
 
 1. Convert your data to a RLDS dataset. You can follow data converter open-sourced by  [OpenVLA](https://github.com/moojink/rlds_dataset_builder).
 
-2. Defining training configs and running training (**Code coming soon**):
+2. Defining training configs and running training:
 
    **Defining Training Configs**
 

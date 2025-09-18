@@ -13,7 +13,7 @@ adapter_tmp_dir: adapter_tmp_weights # not used
 hf_token: .hf_token                   # Hugging Face token (for loading model from private repo)
 
 # training
-ckpt: /galaxea_fulltime/share/checkpoints/0802_stage2_scratch_144tasks_to1_ta32_3cam_bs1024_4epochs--0802_082102/model_79726.pt
+ckpt: experiments/checkpoints/G0_3B_base.pt
 use_lora: False
 lora_rank: 32 # not used
 lora_dropout: 0.0 # not used
