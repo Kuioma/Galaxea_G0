@@ -102,7 +102,7 @@ To fine-tune our model with your own data, you should follow three steps:
 
 1. Convert your data to a RLDS dataset. You can follow data converter open-sourced by  [OpenVLA](https://github.com/moojink/rlds_dataset_builder).
 
-2. Defining training configs and running training (**Code coming soon**):
+2. Defining training configs and running training:
 
    **Defining Training Configs**
 
