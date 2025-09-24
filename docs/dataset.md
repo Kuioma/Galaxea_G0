@@ -2,10 +2,10 @@
 
 ## RLDS Format
 
-#### Dataset Schema
+#### RLDS Dataset Schema
 
 ```
-OpenGalaxeaDataset = {
+RLDSDataset = {
     "episode_metadata": {
         "file_path": tf.Text,  # path to the original data file
     },
@@ -39,6 +39,36 @@ OpenGalaxeaDataset = {
 }
 ```
 
+#### Lerobot Dataset Schema in parquet
+```
+LerobotDataset = {
+    "observation.state.left_arm": numpy.ndarray(6, dtype=float32), # joint positions of the left arm
+    "observation.state.left_arm.velocities": numpy.ndarray(6, dtype=float32), # joint velocities of the left arm
+    "observation.state.right_arm": numpy.ndarray(6, dtype=float32), # joint positions of the right arm
+    "observation.state.right_arm.velocities": numpy.ndarray(6, dtype=float32), # joint velocities of the right arm
+    "observation.state.chassis": numpy.ndarray(6, dtype=float32), # robot base position and orientation
+    "observation.state.torso": numpy.ndarray(4, dtype=float32), # joint positions of the torso
+    "observation.state.torso.velocities": numpy.ndarray(4, dtype=float32), # joint velocities of the torso
+    "observation.state.left_gripper": numpy.ndarray(1, dtype=float32), # left gripper state, 0-close and 100-open
+    "observation.state.right_gripper": numpy.ndarray(1, dtype=float32), # right gripper state, 0-close and 100-open
+    "observation.state.left_ee_pose": numpy.ndarray(7, dtype=float32), # left end-effector pose (position + orientation)
+    "observation.state.right_ee_pose": numpy.ndarray(7, dtype=float`32), # right end-effector pose (position + orientation)
+    "action.left_gripper": numpy.ndarray(1, dtype=float32), # left gripper action
+    "action.right_gripper": numpy.ndarray(1, dtype=float32), # right gripper action
+    "action.chassis.velocities": numpy.ndarray(6, dtype=float32), # robot base velocities
+    "action.left_arm": numpy.ndarray(6, dtype=float32), # left arm joint velocities
+    "action.right_arm": numpy.ndarray(6, dtype=float32), # right arm joint velocities
+    "timestamp": Scalar(dtype=float32), # timestamp of the frame
+    "frame_index": Scalar(dtype=int32), # index of the frame in the episode
+    "episode_index": Scalar(dtype=int32), # index of the episode
+    "index": Scalar(dtype=int32), # step index in the episode
+    "coarse_task_index": Scalar(dtype=int32), # high level instruction index in tasks.jsonl
+    "task_index": Scalar(dtype=int32), # index for the low level instruction in episodes.jsonl
+    "coarse_quality_index": Scalar(dtype=int32), # episode quality label(None or unqualified) index in tasks.jsonl
+    "quality_index": Scalar(dtype=int32), # atomtic quality label(qualified or unqualified) index in tasks.jsonl
+}
+```
+Additionally, the resolution of all videos are 1280x720, and the frame rate is 15 fps.
 #### Example
 
 We provide an example script to load our RLDS dataset and transform some episodes into mp4 video format (head camera).
