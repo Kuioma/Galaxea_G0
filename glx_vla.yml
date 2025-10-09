@@ -274,4 +274,4 @@ dependencies:
       - yacs==0.1.8
       - yarl==1.18.3
       - zipp==3.21.0
-prefix: /root/miniconda3/envs/pi0
+prefix: /root/miniconda3/envs/g0
