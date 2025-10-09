@@ -30,8 +30,8 @@ We are gradually open-sourcing the dataset and model. Progress will be updated h
 - [x] **Sep 17, 2025**  
   - Release **G0-VLA fine-tuning code**.
 
-- [ ] **Mid-Sep, 2025**  
-  - Release **Lerobot Format Galaxea Open-World Dataset**.
+- [x] **Oct 7, 2025**  
+  - Now Lerobot Format Galaxea Open-World Dataset is available at [Huggingface](https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset)!
 
 - [ ] **Later in 2025**  
   - 🔮 More updates to come (extended datasets, improved models, additional tools).
