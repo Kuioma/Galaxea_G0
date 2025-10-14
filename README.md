@@ -7,7 +7,9 @@
 [![Huggingface](https://img.shields.io/badge/Huggingface-FF6B35?style=for-the-badge&logo=huggingface)](https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset)
 [![Modelscope](https://img.shields.io/badge/Modelscope-1890FF?style=for-the-badge&logo=alibabacloud)](https://www.modelscope.cn/datasets/Galaxea/Galaxea-Open-World-Dataset)
 [![Twitter](https://img.shields.io/badge/Twitter-FF6B35?style=for-the-badge&logo=x)](https://x.com/Galaxea_x)
-[![Linkedin](https://img.shields.io/badge/Linkedin-1890FF?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/company/galaxeadynamics/posts/?feedView=all&viewAsMember=true)
+[![Linkedin](https://img.shields.io/badge/Linkedin-5865F2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/company/galaxeadynamics/posts/?feedView=all&viewAsMember=true)
+[![Discord](https://img.shields.io/badge/Discord-1890FF?style=for-the-badge&logo=discord)](https://discord.gg/hB6BuUWZZA)
+
 
 
 
