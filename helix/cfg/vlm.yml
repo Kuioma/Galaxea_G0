@@ -1,0 +1,39 @@
+
+Backbone:
+  VLM:
+    layer_num: 16
+    emb_dim: &emb_dim 512
+    vocab_size: 22222
+    last_norm_layer:
+      type: RMSNorm
+      eps: 1e-9
+    transformer:
+      # attention
+      attention:
+        type: GQA
+        emb_dim: *emb_dim
+        query_head_num: 16
+        head_dim: 128
+        group_num: 4
+        QKNorm: False
+        RoPE: False
+        # mask_type: Casual
+        mask_type: Casual
+      #
+      mlp:
+        dim: *emb_dim
+        # hidden dim = dim * hidden_dim_ratio
+        hidden_dim_ratio: 2
+        ffn:
+          # type: Swish Linear
+          type: Swish
+        activate:
+          # type: ReLu
+          type: ReLU
+      # normlization layer
+      norm:
+        type: RMSNorm
+        eps: 1e-9
+      # normlization position: pre_norm,post_norm,post_norm_inside
+      norm_pos: pre_norm 
+

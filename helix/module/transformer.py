@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
-from attention import multihead_attention
-from factory import attention_factory,mlp_factory,norm_factory
+import sys
+import os
+sys.path.append("/Users/shijunjie/code/my_porject/Galaxea_G0")
+from helix.module.attention import multihead_attention
+from helix.module.factory import attention_factory,mlp_factory,norm_factory
 # 单decoder
 # attention+MLP
 # 输入输出维度
@@ -27,11 +30,11 @@ class TransformerDecoder(nn.Module):
 
     def forward(self,x):
         if self.norm_pos == "pre_norm":
-            self.pre_norm_forward(x)
+            return self.pre_norm_forward(x)
         elif self.norm_pos == "post_norm":
-            self.post_norm_forward(x)
+            return self.post_norm_forward(x)
         elif self.norm_pos == "post_norm_inside":
-            self.post_norm_inside_forward(x)
+            return self.post_norm_inside_forward(x)
 
     def pre_norm_forward(self,x):
         residual = x
