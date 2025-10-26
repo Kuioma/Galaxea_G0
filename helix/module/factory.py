@@ -9,20 +9,23 @@ from attention import GQA
 def mlp_factory(cfg:dict):
     dim = cfg["dim"]
     hidden_dim = dim*cfg["hidden_dim_ratio"]
-    if cfg["ffn"]["type"] == "SwiGLU":
+    ffn_type = cfg["ffn"]["type"]
+    activate_type = cfg["activate"]["type"]
+
+    if ffn_type == "SwiGLU":
         hidden_dim = int(2*hidden_dim/3)
         mlp = SwiGLU(dim,hidden_dim)
         return mlp
-    elif cfg["ffn"]["type"] == "Linear":
+    elif ffn_type == "Linear":
         ffn_1 = nn.Linear(dim,hidden_dim)
         ffn_2 = nn.Linear(hidden_dim,dim)
     else:
-        raise ValueError(f"{cfg["ffn"]["type"]} not implement")
+        raise ValueError(f"{ffn_type} not implement")
     
-    if cfg["activate"]["type"] == "ReLU":
+    if activate_type == "ReLU":
         activate_layer = nn.ReLU()
     else:
-        raise ValueError(f"{cfg["ffn"]["type"]} not implement")
+        raise ValueError(f"{activate_type} not implement")
     
     return nn.Sequential(
         ffn_1,
@@ -31,24 +34,26 @@ def mlp_factory(cfg:dict):
     )
 
 def norm_factory(cfg:dict):
-    if cfg["type"] == "RMSNorm":
+    norm_type = cfg["type"]
+    if norm_type == "RMSNorm":
         if "eps" in cfg.keys():
             eps = cfg["eps"]
         dim = cfg["dim"]
         return nn.RMSNorm(dim,eps=eps)
-    elif cfg["type"] == "LayerNorm":
+    elif norm_type == "LayerNorm":
         if "eps" in cfg.keys():
             eps = cfg["eps"]
         dim = cfg["dim"]
         return nn.LayerNorm(dim,eps=eps)
     else:
-        raise ValueError(f"{cfg["type"]} not implement")
+        raise ValueError(f"{norm_type} not implement")
 
 def attention_factory(cfg:dict):
-    if cfg["type"] == "GQA":
+    attention_type = cfg["type"]
+    if attention_type == "GQA":
         return GQA(cfg)
     else:
-        raise ValueError(f"{cfg["type"]} not implement")
+        raise ValueError(f"{attention_type} not implement")
 
 
 class SwiGLU(nn.Module):
