@@ -140,7 +140,7 @@ We will collect common issues and their solutions here. If you encounter an issu
 |     Issue     |                          Resolution                          |
 | :-----------: | :----------------------------------------------------------: |
 | About dataset | Step in our dataset is 15 HZ, and image resolution in RLDS is 224 x 224. But the lerobot format dataset with full resolution (1280 x 720) will come soon. |
-|               |                                                              |
+| Action dimension and Proprios dimension             |  Refer to [Huggingface](https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset/discussions/6.)                                                            |
 |               |                                                              |
 
 
