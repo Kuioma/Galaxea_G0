@@ -17,14 +17,14 @@ def multihead_attention(q: Float[Tensor, "... len dim"],
     b,l,d = q.shape
     output_dim = d
     assert output_dim%head_num == 0
-    head_dim = output_dim/head_num
+    head_dim = torch.tensor(output_dim/head_num)
     if RoPE:
         pass
     q = rearrange(q, '... q_l (h h_d) -> ... h q_l h_d',h= head_num)
     k = rearrange(k, '... k_l (h h_d) -> ... h h_d k_l',h= head_num)
     v = rearrange(v, '... k_l (h h_d) -> ... h k_l h_d',h= head_num)
     attn = einsum(q,k,'... q_l h_d,... h_d k_l -> ... q_l k_l')
-    if mask:
+    if mask is not None:
         pass
     attn = attn/torch.sqrt(head_dim)
     attn = torch.softmax(attn,dim=-1)

@@ -1,0 +1,25 @@
+action_expert:
+  DiT:
+    query_dim: 20
+    context_dim: 10
+    hidden_dim: 10
+    n_head: 2
+    n_layers: 5
+    output_dim: 20
+    norm_type: "LayerNorm"
+    positional_emb_type: "sinusoidal"
+    max_seq_len_in_sin_pos_emb: 1000
+    attention_mask: True
+  
+  Beta:
+    alpha: 2
+    beta: 1
+
+  State:
+    dim: 10
+  
+  Action:
+    dim: 7
+    chunk_size: 16
+
+  num_inference_timesteps: 4
