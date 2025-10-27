@@ -54,7 +54,7 @@ class GQA(nn.Module):
         self.RoPE = config["RoPE"]
         self.mask_func = mask_factory(config["mask_type"])
         #assert self.embed_dim%self.query_head_num == 0,"embed_dim%query_head_num != 0"
-        assert self.query_head_num%self.group_num == 0,"query_head_num%\group_num != 0"
+        assert self.query_head_num%self.group_num == 0,"query_head_num%group_num != 0"
         self.repeat_num = int(self.query_head_num/self.group_num)
         self.kv_head_num = int(self.group_num)
 

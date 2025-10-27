@@ -12,6 +12,9 @@ from .attention import GQA
 def mlp_factory(cfg:dict):
     dim = cfg["dim"]
     hidden_dim = int(dim*cfg["hidden_dim_ratio"])
+    ffn_type = cfg["ffn"]["type"]
+    activate_type = cfg["activate"]["type"]
+
     if "output_dim" in cfg.keys():
         output_dim = cfg["output_dim"]
     else:
