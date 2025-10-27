@@ -20,18 +20,18 @@ def mlp_factory(cfg:dict):
         hidden_dim = int(2*hidden_dim/3)
         mlp = SwiGLU(dim,hidden_dim)
         return mlp
-    elif cfg["ffn"]["type"] == "Linear":
+    elif ffn_type == "Linear":
         ffn_1 = nn.Linear(dim,hidden_dim)
         ffn_2 = nn.Linear(hidden_dim,output_dim) if output_dim else nn.Linear(hidden_dim,dim)
     else:
-        raise ValueError(f"{cfg["ffn"]["type"]} not implement")
+        raise ValueError(f"{ffn_type} not implement")
     
-    if cfg["activate"]["type"] == "ReLU":
+    if activate_type == "ReLU":
         activate_layer = nn.ReLU()
     elif cfg["activate"]["type"] == "SiLU":
         activate_layer = nn.SiLU()
     else:
-        raise ValueError(f"{cfg["ffn"]["type"]} not implement")
+        raise ValueError(f"{activate_type} not implement")
     
     return nn.Sequential(
         ffn_1,
@@ -40,12 +40,13 @@ def mlp_factory(cfg:dict):
     )
 
 def norm_factory(cfg:dict):
-    if cfg["type"] == "RMSNorm":
+    norm_type = cfg["type"]
+    if norm_type == "RMSNorm":
         if "eps" in cfg.keys():
             eps = cfg["eps"]
         dim = cfg["dim"]
         return nn.RMSNorm(dim,eps=eps)
-    elif cfg["type"] == "LayerNorm":
+    elif norm_type == "LayerNorm":
         if "eps" in cfg.keys():
             eps = cfg["eps"]
         else: eps = 0.00001
@@ -59,13 +60,14 @@ def norm_factory(cfg:dict):
         dim = cfg["dim"]
         return AdaLayerNorm(dim, norm_eps=eps)
     else:
-        raise ValueError(f"{cfg["type"]} not implement")
+        raise ValueError(f"{norm_type} not implement")
 
 def attention_factory(cfg:dict):
-    if cfg["type"] == "GQA":
+    attention_type = cfg["type"]
+    if attention_type == "GQA":
         return GQA(cfg)
     else:
-        raise ValueError(f"{cfg["type"]} not implement")
+        raise ValueError(f"{attention_type} not implement")
 
 def positional_emb_factory(cfg:dict):
     if cfg['type'] == "sinusoidal":

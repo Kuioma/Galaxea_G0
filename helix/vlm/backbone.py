@@ -1,5 +1,5 @@
-from module import factory
-from module.transformer import TransformerDecoder
+from helix.module import factory
+from helix.module.transformer import TransformerDecoder
 from jaxtyping import Int,Float
 import torch
 from torch import Tensor
@@ -30,6 +30,9 @@ class Vlm(nn.Module):
         tokens_embed = self.last_norm_layer(tokens_embed)
         result = self.output_layer(tokens_embed)
         return result,transformer_embed
-    
+    @classmethod
+    def load_from_yaml(self,yaml_path):
+        pass
+
     def load_param():
         pass
